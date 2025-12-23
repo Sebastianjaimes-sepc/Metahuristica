@@ -32,3 +32,5 @@ def calculadora():
         print(f"Resultado: {res} (no es entero — par/impar no aplica)")
 
 calculadora()
+
+print("Fin del programa")
