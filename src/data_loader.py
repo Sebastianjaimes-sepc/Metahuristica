@@ -1,9 +1,9 @@
-"""Data loader for AMPL .dat instances used in the GA routing project.
-Provides:
-- parse_ampl_dat(path) -> dict of raw params
-- build_instance(parsed) -> Instance dataclass with typed structures
+"""Cargador de datos para instancias AMPL .dat usadas en el proyecto GA.
+Provee:
+- parse_ampl_dat(path) -> dict con parámetros crudos
+- build_instance(parsed) -> dataclass `Instance` con estructuras tipadas
 
-The parser is tolerant to the specific .dat formatting used in the provided instance file.
+El parser es tolerante al formato .dat usado en la instancia de ejemplo.
 """
 from dataclasses import dataclass
 from typing import Dict, Any
@@ -51,7 +51,7 @@ class Instance:
         return len(self.clients)
 
 # ------------------------------------------------------
-# Lightweight AMPL .dat parser
+# Parser ligero para archivos AMPL .dat
 # ------------------------------------------------------
 
 def _numtok(s: str):
@@ -70,7 +70,7 @@ def _tokenize_pairs(body: str):
         return {}
     if len(toks) == 1:
         return _numtok(toks[0])
-    # pairs index value
+    # pares índice-valor
     if len(toks) % 2 == 0:
         d = {}
         for i in range(0, len(toks), 2):
@@ -219,14 +219,14 @@ def build_instance(parsed: dict) -> Instance:
     if Dist.size and (Dist.shape[0] != n_nodes or Dist.shape[1] != n_nodes):
         logger.warning(f"Dist matrix shape {Dist.shape} does not match number of nodes {n_nodes}")
     if len(tvia) == 0:
-        logger.warning("tvia not parsed as blocks per franja; check file format")
+        logger.warning("tvia no fue parseado por franjas; revise el formato del archivo .dat")
 
     return inst
 
 
 if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser(description='Quick tester for data_loader')
+    parser = argparse.ArgumentParser(description='Probador rápido del cargador de datos (data_loader)')
     parser.add_argument('--dat', required=True)
     args = parser.parse_args()
     parsed = parse_ampl_dat(args.dat)

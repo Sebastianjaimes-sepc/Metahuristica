@@ -1,20 +1,20 @@
-"""Encoding and GA operators for single-vector representation.
-Vector encoding: [0, route1..., 0, route2..., 0, ..., 0]
-(0 represents depot). There must be R+1 zeros if we maintain exactly R trucks.
+"""Codificación y operadores GA para la representación en vector único.
+Codificación: [0, ruta1..., 0, ruta2..., 0, ..., 0]
+(0 representa el depósito). Debe haber R+1 ceros si mantenemos exactamente R camiones.
 """
 import random
 from typing import List, Tuple
 
 DEPOT = 0
 
-# Utilities
+# Utilidades
 
 def clients_from_vector(vec: List[int]) -> List[int]:
     return [x for x in vec if x != DEPOT]
 
 
 def count_trucks_from_vector(vec: List[int]) -> int:
-    # number of segments = number of zeros - 1
+    # número de segmentos = cantidad de ceros - 1
     zeros = sum(1 for x in vec if x == DEPOT)
     return max(0, zeros - 1)
 
@@ -41,13 +41,13 @@ def decode_vector(vec: List[int]) -> List[List[int]]:
                 current = []
         else:
             current.append(int(x))
-    # Note: last depot closes last route; if not, append
+    # Nota: el último depósito cierra la última ruta
     return routes
 
-# Genetic operators
+# Operadores genéticos
 
 def cut_and_fill(parent_a: List[int], parent_b: List[int], rng=random) -> List[int]:
-    """Cut-and-fill using flattened client lists. Preserves number of trucks (zeros) from parent_a."""
+    """Mutación cut-and-fill usando la lista plana de clientes. Preserva la cantidad de camiones (ceros) del padre A."""
     A_clients = clients_from_vector(parent_a)
     B_clients = clients_from_vector(parent_b)
     n = len(A_clients)
@@ -85,7 +85,7 @@ def swap_mutation(vec: List[int], rng=random) -> List[int]:
         return vec[:]
     i, j = rng.sample(range(len(clients)), 2)
     clients[i], clients[j] = clients[j], clients[i]
-    # reconstruct preserving original truck splits
+    # reconstruir preservando la distribución original de camiones
     R = count_trucks_from_vector(vec)
     if R <= 0:
         return [DEPOT] + clients + [DEPOT]
@@ -124,7 +124,7 @@ def insert_mutation(vec: List[int], rng=random) -> List[int]:
 
 
 def route_based_crossover(parent_a: List[int], parent_b: List[int], rng=random) -> List[int]:
-    """Take a random subset of routes (whole routes between depots) from A and fill remaining with B order"""
+    """Tomar un subconjunto aleatorio de rutas completas de A y rellenar las restantes con el orden de B."""
     routes_a = decode_vector(parent_a)
     routes_b = decode_vector(parent_b)
     R = len(routes_a)
@@ -164,11 +164,11 @@ if __name__ == '__main__':
     # quick demo
     pA = [0,1,2,3,0,4,5,0]
     pB = [0,4,2,1,0,3,5,0]
-    print('A', pA)
-    print('B', pB)
+    print('Padre A:', pA)
+    print('Padre B:', pB)
     child = route_based_crossover(pA,pB)
-    print('RBX child', child)
+    print('Hijo (RBX):', child)
     child2 = cut_and_fill(pA,pB)
-    print('Cut-and-fill child', child2)
-    print('Swap mut', swap_mutation(child))
-    print('Insert mut', insert_mutation(child))
+    print('Hijo (Cut-and-fill):', child2)
+    print('Mutación (Swap):', swap_mutation(child))
+    print('Mutación (Insert):', insert_mutation(child))
