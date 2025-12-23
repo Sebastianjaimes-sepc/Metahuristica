@@ -8,26 +8,32 @@ def calculadora():
         print("5. Potencia")
         print("6. Salir")
 
-        opcion = input("Elige una opción: ")
-
-        if opcion == "6":
-            print("Calculadora cerrada")
-            break
-
-        a = float(input("Ingrese el primer número: "))
-        b = float(input("Ingrese el segundo número: "))
-
-        if opcion == "1":
-            print("Resultado:", a + b)
-        elif opcion == "2":
-            print("Resultado:", a - b)
-        elif opcion == "3":
-            print("Resultado:", a * b)
-        elif opcion == "4":
-            print("Resultado:", "Error: división por cero" if b == 0 else a / b)
-        elif opcion == "5":
-            print("Resultado:", a ** b)
+    res = None
+    if op == "+":
+        res = a + b
+    elif op == "-":
+        res = a - b
+    elif op == "*":
+        res = a * b
+    elif op == "/":
+        if b != 0:
+            res = a / b
         else:
-            print("Opción no válida")
+            print("Error: división por cero")
+            return
+    else:
+        print("Operación no válida")
+        return
+
+    # Mostrar resultado y, si es entero, indicar par o impar
+    if isinstance(res, float) and res.is_integer():
+        entero = int(res)
+        paridad = "par" if entero % 2 == 0 else "impar"
+        print(f"Resultado: {res} -> {paridad}")
+    elif isinstance(res, int):
+        paridad = "par" if res % 2 == 0 else "impar"
+        print(f"Resultado: {res} -> {paridad}")
+    else:
+        print(f"Resultado: {res} (no es entero — par/impar no aplica)")
 
 calculadora()
