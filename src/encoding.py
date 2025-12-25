@@ -65,17 +65,22 @@ def cut_and_fill(parent_a: List[int], parent_b: List[int], rng=random) -> List[i
 
     # reinsert zeros keeping same number of trucks as parent_a
     R = count_trucks_from_vector(parent_a)
-    # partition offspring_clients into R parts as evenly as possible
+    # partition offspring_clients into R parts. Allow uneven partitions and empty routes
     if R <= 0:
         return [DEPOT] + offspring_clients + [DEPOT]
-    base = len(offspring_clients) // R
-    rem = len(offspring_clients) % R
+    n = len(offspring_clients)
+    # choose R-1 split points in [0..n] (duplicates allowed => empty segments)
+    splits = [rng.randint(0, n) for _ in range(R-1)]
+    splits_sorted = sorted(splits)
     routes = []
-    idx = 0
-    for r in range(R):
-        size = base + (1 if r < rem else 0)
-        routes.append(offspring_clients[idx:idx+size])
-        idx += size
+    start = 0
+    for s in splits_sorted:
+        routes.append(offspring_clients[start:s])
+        start = s
+    routes.append(offspring_clients[start:n])
+    # ensure we have exactly R routes
+    while len(routes) < R:
+        routes.append([])
     return encode_routes(routes)
 
 

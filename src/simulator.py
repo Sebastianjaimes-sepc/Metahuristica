@@ -179,16 +179,12 @@ def simulate_route(route: List[int], HS: float, truck_id:int, inst: Instance) ->
         f = franja_of_time(tcur, inst.tinic, inst.tfin)
         ttravel = inst.tvia.get(f, next(iter(inst.tvia.values())))[prev, c]
         arr = tcur + ttravel
-        # wait if before MinDC
+        # parameters and initial values
         minc = inst.clients[c].MinDC
         maxc = inst.clients[c].MaxDC
+        # Modelo AMPL: permite iniciar servicio en la llegada (sin esperar), pero registra MinEx/MaxEx
         W = 0.0
-        if arr < minc:
-            W = minc - arr
-            start = minc
-        else:
-            start = arr
-        # service
+        start = arr
         HI = start
         tfinish = HI + inst.clients[c].TS
         # update q
@@ -198,11 +194,11 @@ def simulate_route(route: List[int], HS: float, truck_id:int, inst: Instance) ->
         # check capacity
         if q > Cap:
             res['violations']['cap_viol'] += q - Cap
-        # check windows
-        if arr < minc:
-            res['violations']['window_early'] += (minc - arr)
-        if arr > maxc:
-            res['violations']['window_late'] += (arr - maxc)
+        # registrar violaciones tempranas/tardías (MinEx / MaxEx) en lugar de forzar espera
+        early = max(0.0, minc - arr)
+        late = max(0.0, arr - maxc)
+        res['violations']['window_early'] += early
+        res['violations']['window_late'] += late
         # store
         res['Arr'][c] = arr
         res['HI'][c] = HI
@@ -256,19 +252,19 @@ def evaluate_individual(vec: List[int], inst: Instance, weights:Dict[str,float]=
             total_cost += truck_obj.CF6 * 1.0
         elif truck_obj.esF12 == 1:
             total_cost += truck_obj.CF12 * 1.0
-        # penalties windows
-        # distinguish clientes críticos (we'll weight with pcmin_c/pcmax_c)
+        # penalties windows: compute per-client early/late and weight by critical flag
         pcmin_c = float(inst.params.get('pcmin_c', 0))
         pcmax_c = float(inst.params.get('pcmax_c', 0))
         pcmin_nc = float(inst.params.get('pcmin_nc', 0))
         pcmax_nc = float(inst.params.get('pcmax_nc', 0))
-        w_viol = 0.0
         for c in route:
-            if inst.clients[c].escritico==1:
-                w_viol += pcmin_c * sim['violations']['window_early'] + pcmax_c * sim['violations']['window_late']
+            arr = sim['Arr'].get(c, 0.0)
+            early = max(0.0, inst.clients[c].MinDC - arr)
+            late = max(0.0, arr - inst.clients[c].MaxDC)
+            if inst.clients[c].escritico == 1:
+                total_penalty += pcmin_c * early + pcmax_c * late
             else:
-                w_viol += pcmin_nc * sim['violations']['window_early'] + pcmax_nc * sim['violations']['window_late']
-        total_penalty += w_viol
+                total_penalty += pcmin_nc * early + pcmax_nc * late
         total_penalty += float(inst.params.get('preg',0)) * sim['violations'].get('late_return', 0.0)
         total_wait += sum(sim['W'].values()) if sim['W'] else 0.0
 
